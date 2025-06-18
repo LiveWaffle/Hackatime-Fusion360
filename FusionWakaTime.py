@@ -41,17 +41,21 @@ WakaTimePath = os.path.join(os.path.dirname(__file__), "WakaTimeCli.exe")
 timeout = 30
 start_time = time.time()
 
-while app.activeDocument is None:
-    if time.time() - start_time > timeout:
-        ctypes.windll.user32.MessageBoxW(0, u"Error No project open in alloted time", u"Invalid", 0)
-        sys.exit()
-        time.sleep(1)
+
+def getActiveDocument():
+    try:
+        design= app.activeDocument
+        if design is not None:
+            return design.name
+    except Exception as e:
+        app.log(f"Could not get Active Document: {e}")
+        return None
 
 
+design = getActiveDocument()
+if not design:
+    design = "Untitled"
 
-
-
-design = app.activeDocument.name
 app.log("FusionDocument type: " + str(design))
 
 
