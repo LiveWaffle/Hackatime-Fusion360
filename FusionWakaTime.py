@@ -62,7 +62,7 @@ stopEvent = threading.Event()
 
 def run(context):
     try:
-        Contents()  # or move all its contents here directly
+        Contents()
     except Exception as e:
         app.log(f"Run failed: {str(e)}")
 
@@ -100,14 +100,44 @@ def Contents():
         app.log(platform.machine())
 
         app.log("part 2")
-        if arch == "AMD64":
-            WakaTimePath = os.path.join(os.path.dirname(__file__), "WakaTimeCli.exe")
-        elif arch in ("ARM64", "aarch64"):
-            WakaTimePath = os.path.join(os.path.dirname(__file__), "WakaTimeCliARM64.exe")
-        elif arch in ("i386", "x86"):
-            WakaTimePath = os.path.join(os.path.dirname(__file__), "WakaTimeCli386.exe")
-        else:
-            app.log("Unsupported CPU platform ")
+
+        
+        if platform == "linux" or platform == "linux2":
+            app.log("Linux")
+            if arch == ("AMD","x86_64"):
+                WakaTimePath = os.path.join(os.path.dirname(__file__),"wakatime-clis", "wakatime-cli-linux-amd64")
+            elif arch == ("i386", "i686", "x86"):
+                WakaTimePath = os.path.join(os.path.dirname(__file__),"wakatime-clis", "wakatime-cli-linux-386")
+            elif arch == ("ARM"):
+                WakaTimePath = os.path.join(os.path.dirname(__file__), "wakatime-clis", "wakatime-cli-linux-arm")
+            elif arch == ("ARM64", "aarch64"):
+                WakaTimePath = os.path.join(os.path.dirname(__file__), "wakatime-clis", "wakatime-cli-linux-arm64")
+            elif arch == ("RISCV64", "riscv64"):
+                WakaTimePath = os.path.join(os.path.dirname(__file__), "wakatime-clis", "wakatime-cli-linux-riscv64")
+            else:
+                app.log("Unsupported Architecture")
+
+
+
+        elif platform == "darwin":
+            app.log("macOS")
+            if arch == ("AMD","x86_64"):
+                WakaTimePath = os.path.join(os.path.dirname(__file__), "wakatime-clis", "wakatime-cli-darwin-amd64")
+            elif arch == ("ARM64", 'arm64'):
+                WakaTimePath = os.path.join(os.path.dirname(__file__), "wakatime-clis", "wakatime-cli-darwin-arm64")
+
+
+
+        elif platform == "win32":
+            app.log("Windows")
+            if arch == "AMD64":
+                WakaTimePath = os.path.join(os.path.dirname(__file__), "wakatime-clis", "WakaTimeCli.exe")
+            elif arch in ("ARM64", "aarch64"):
+                WakaTimePath = os.path.join(os.path.dirname(__file__), "wakatime-clis", "WakaTimeCliARM64.exe")
+            elif arch in ("i386", "x86"):
+                WakaTimePath = os.path.join(os.path.dirname(__file__), "wakatime-clis", "WakaTimeCli386.exe")
+                        
+
 
 
         timeout = 30
@@ -163,7 +193,10 @@ def Contents():
                     ]
                     try:
                         app.log("Running CLI: " + ' '.join(CliCommand))
-                        result = subprocess.run(CliCommand, capture_output=True, text=True, creationflags=CREATE_NO_WINDOW)
+                        if  platform == "win32":
+                            result = subprocess.run(CliCommand, capture_output=True, text=True, creationflags=CREATE_NO_WINDOW)
+                        else:
+                            result = subprocess.run(CliCommand, capture_output=True, text=True)
                         app.log(f"Heartbeat Sent under project: {folderName}")
                     except Exception as e:
                         app.log("error!!")
