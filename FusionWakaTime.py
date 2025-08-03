@@ -8,6 +8,8 @@ import traceback
 import hashlib
 import os
 import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'bundles'))
+
 import time
 import subprocess
 import ctypes
@@ -35,18 +37,6 @@ def checkInstallWindows():
     pypath = os.path.dirname(sys.executable)
     PyExe = os.path.join(pypath,"python","python.exe")
     exists = os.path.exists(pypath + "/Lib/site-packages/requests")
-
-
-def checkInstallMac():
-    pypath = os.path.dirname(sys.executable)
-    PyExe = sys.executable
-    sitePackagesPath = os.path.abspath(os.path.join(pypath, "..", "lib", f"python{sys.version_info.major}.{sys.version_info.minor}", "site-packages"))
-    requestsPath = os.path.join(sitePackagesPath, "requests")
-    exists = os.path.exists(requestsPath)
-
-
-
-
 
 lastActive = time.time()
 heartbeat_interval = 30
@@ -78,11 +68,10 @@ stopEvent = threading.Event()
 
 def run(context):
     try:
-        checkInstallDependencies()     
         if sys.platform == "win32":
             checkInstallWindows()
         elif sys.platform == "darwin":
-            checkInstallMac()
+            app.log("macOS")
         Contents()
     except Exception as e:
         app.log(f"Run failed: {str(e)}")
@@ -115,7 +104,7 @@ def Contents():
         if os.path.exists(parsePath):
             APIKEY = parse.get('settings','api_key')
             APIURL = parse.get('settings','api_url')
-            print("Key: "+APIKEY + " Url: "+ APIURL)
+            app.log("Key: "+APIKEY + " Url: "+ APIURL)
         else:
             ErrorMessage = ctypes.windll.user32.MessageBoxW(0, u"Please use the script to download the hackatime files! https://hackatime.hackclub.com/", u"Invalid File", 0)
 
