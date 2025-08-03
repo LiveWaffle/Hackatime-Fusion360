@@ -17,19 +17,25 @@ from . import commands
 from .lib import fusionAddInUtils as futil
 import threading
 import platform
-import chardet
-import requests
+def checkInstallDependencies():
+    try:
+        import requests
+        import chardet
+        app.log("Dependencies already installed...!")
+    except ImportError:
+        try:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "requests", "chardet"])
+            app.log("Dependencies Installed...!")
+        except Exception as e:
+            app.log(f"Failed to install dependencies: {str(e)}")
+
 if platform == "win32":
     from subprocess import CREATE_NO_WINDOW
 def checkInstallWindows():
     pypath = os.path.dirname(sys.executable)
     PyExe = os.path.join(pypath,"python","python.exe")
     exists = os.path.exists(pypath + "/Lib/site-packages/requests")
-    if exists == False:
-        subprocess.check_call([PyExe, "-m", "pip", "install", "requests", "chardet"])
-        app.log("Dependencies Installed...!")
-    if exists == True:
-        app.log("Dependencies already installed...!")
+
 
 def checkInstallMac():
     pypath = os.path.dirname(sys.executable)
@@ -37,16 +43,8 @@ def checkInstallMac():
     sitePackagesPath = os.path.abspath(os.path.join(pypath, "..", "lib", f"python{sys.version_info.major}.{sys.version_info.minor}", "site-packages"))
     requestsPath = os.path.join(sitePackagesPath, "requests")
     exists = os.path.exists(requestsPath)
-    if exists == False:
-        subprocess.check_call([PyExe, "-m", "pip", "install", "requests", "chardet"])
-        app.log("Dependencies Installed...!")
-    if exists == True:
-        app.log("Dependencies already installed...!")
 
-if sys.platform == "win32":
-    checkInstallWindows()
-elif sys.platform == "darwin":
-    checkInstallMac()
+
 
 
 
@@ -80,6 +78,11 @@ stopEvent = threading.Event()
 
 def run(context):
     try:
+        checkInstallDependencies()     
+        if sys.platform == "win32":
+            checkInstallWindows()
+        elif sys.platform == "darwin":
+            checkInstallMac()
         Contents()
     except Exception as e:
         app.log(f"Run failed: {str(e)}")
@@ -87,6 +90,8 @@ def run(context):
 
 
 def Contents():
+    import chardet
+
     app.log("part -1")
     try:
         def DetectEncode():
