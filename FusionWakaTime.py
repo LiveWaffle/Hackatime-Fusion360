@@ -96,7 +96,15 @@ def Contents():
                 configPath = os.path.join(os.environ['HOME'], '.wakatime.cfg')
             with open(configPath, "rb") as file:
                     data = file.read()
-                    encoded = chardet.detect(data)
+                    from chardet.universaldetector import UniversalDetector
+
+                    def detect(data):
+                        detector = UniversalDetector()
+                        detector.feed(data)
+                        detector.close()
+                        return detector.result
+
+                    encoded = detect(data)
                     encoding = encoded["encoding"]
                     if encoding is None:
                         return "UTF-8"
@@ -107,7 +115,10 @@ def Contents():
         log(DetectEncode())
         log("part 1")
         parse=configparser.ConfigParser()
-        parsePath = os.path.join(os.environ['USERPROFILE'], '.wakatime.cfg')
+        if sys.platform == "win32":
+            parsePath = os.path.join(os.environ['USERPROFILE'], '.wakatime.cfg')
+        else:
+            parsePath = os.path.join(os.environ['HOME'], '.wakatime.cfg')
         parse.read(parsePath, encoding=DetectEncode())
 
         if os.path.exists(parsePath):
