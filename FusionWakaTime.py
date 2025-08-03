@@ -13,11 +13,14 @@ import subprocess
 import ctypes
 import configparser
 from subprocess import Popen, PIPE, STDOUT
-if platform == "win32":
-    from subprocess import CREATE_NO_WINDOW
 from . import commands
 from .lib import fusionAddInUtils as futil
 import threading
+import platform
+import chardet
+import requests
+if platform == "win32":
+    from subprocess import CREATE_NO_WINDOW
 def checkInstallWindows():
     pypath = os.path.dirname(sys.executable)
     PyExe = os.path.join(pypath,"python","python.exe")
@@ -31,23 +34,21 @@ def checkInstallWindows():
 def checkInstallMac():
     pypath = os.path.dirname(sys.executable)
     PyExe = sys.executable
-
-    version = f"python{sys.version_info.major}.{sys.version_info.minor}"
-    exists = os.path.exists(pypath + f"/../lib/{version}/site-packages/requests")
+    sitePackagesPath = os.path.abspath(os.path.join(pypath, "..", "lib", f"python{sys.version_info.major}.{sys.version_info.minor}", "site-packages"))
+    requestsPath = os.path.join(sitePackagesPath, "requests")
+    exists = os.path.exists(requestsPath)
     if exists == False:
         subprocess.check_call([PyExe, "-m", "pip", "install", "requests", "chardet"])
         app.log("Dependencies Installed...!")
     if exists == True:
         app.log("Dependencies already installed...!")
 
-if platform == "win32":
+if sys.platform == "win32":
     checkInstallWindows()
-elif platform == "darwin":
+elif sys.platform == "darwin":
     checkInstallMac()
 
-import requests
-import platform
-import chardet
+
 
 lastActive = time.time()
 heartbeat_interval = 30
@@ -121,15 +122,15 @@ def Contents():
         
         if platform == "linux" or platform == "linux2":
             app.log("Linux")
-            if arch == ("AMD","x86_64"):
+            if arch in ("AMD","x86_64"):
                 WakaTimePath = os.path.join(os.path.dirname(__file__),"wakatime-clis", "wakatime-cli-linux-amd64")
-            elif arch == ("i386", "i686", "x86"):
+            elif arch in ("i386", "i686", "x86"):
                 WakaTimePath = os.path.join(os.path.dirname(__file__),"wakatime-clis", "wakatime-cli-linux-386")
-            elif arch == ("ARM"):
+            elif arch in ("ARM"):
                 WakaTimePath = os.path.join(os.path.dirname(__file__), "wakatime-clis", "wakatime-cli-linux-arm")
-            elif arch == ("ARM64", "aarch64"):
+            elif arch in ("ARM64", "aarch64"):
                 WakaTimePath = os.path.join(os.path.dirname(__file__), "wakatime-clis", "wakatime-cli-linux-arm64")
-            elif arch == ("RISCV64", "riscv64"):
+            elif arch in ("RISCV64", "riscv64"):
                 WakaTimePath = os.path.join(os.path.dirname(__file__), "wakatime-clis", "wakatime-cli-linux-riscv64")
             else:
                 app.log("Unsupported Architecture")
@@ -138,16 +139,16 @@ def Contents():
 
         elif platform == "darwin":
             app.log("macOS")
-            if arch == ("AMD","x86_64"):
+            if arch in ("AMD","x86_64"):
                 WakaTimePath = os.path.join(os.path.dirname(__file__), "wakatime-clis", "wakatime-cli-darwin-amd64")
-            elif arch == ("ARM64", 'arm64'):
+            elif arch in ("ARM64", 'arm64'):
                 WakaTimePath = os.path.join(os.path.dirname(__file__), "wakatime-clis", "wakatime-cli-darwin-arm64")
 
 
 
         elif platform == "win32":
             app.log("Windows")
-            if arch == "AMD64":
+            if arch in "AMD64":
                 WakaTimePath = os.path.join(os.path.dirname(__file__), "wakatime-clis", "WakaTimeCli.exe")
             elif arch in ("ARM64", "aarch64"):
                 WakaTimePath = os.path.join(os.path.dirname(__file__), "wakatime-clis", "WakaTimeCliARM64.exe")
