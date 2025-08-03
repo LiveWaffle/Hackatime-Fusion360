@@ -13,7 +13,8 @@ import subprocess
 import ctypes
 import configparser
 from subprocess import Popen, PIPE, STDOUT
-from subprocess import CREATE_NO_WINDOW
+if platform == "win32":
+    from subprocess import CREATE_NO_WINDOW
 from . import commands
 from .lib import fusionAddInUtils as futil
 import threading
