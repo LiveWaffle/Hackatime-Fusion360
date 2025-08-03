@@ -8,33 +8,45 @@ import traceback
 import hashlib
 import os
 import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'bundles'))
+
 import time
 import subprocess
 import ctypes
 import configparser
 from subprocess import Popen, PIPE, STDOUT
-from subprocess import CREATE_NO_WINDOW
 from . import commands
 from .lib import fusionAddInUtils as futil
 import threading
-def checkInstall():
+import platform
+def checkInstallDependencies():
+    try:
+        import requests
+        import chardet
+        log("Dependencies already installed...!")
+    except ImportError:
+        try:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "requests", "chardet"])
+            log("Dependencies Installed...!")
+        except Exception as e:
+            log(f"Failed to install dependencies: {str(e)}")
+
+if sys.platform == "win32":
+    from subprocess import CREATE_NO_WINDOW
+def checkInstallWindows():
     pypath = os.path.dirname(sys.executable)
     PyExe = os.path.join(pypath,"python","python.exe")
     exists = os.path.exists(pypath + "/Lib/site-packages/requests")
-    if exists == False:
-        subprocess.check_call([PyExe, "-m", "pip", "install", "requests", "chardet"])
-        app.log("Dependencies Installed...!")
-    if exists == True:
-        app.log("Dependencies already installed...!")
-
-checkInstall()
-import requests
-import platform
-import chardet
 
 lastActive = time.time()
 heartbeat_interval = 30
 inactive_threshold = 30
+
+def log(message, level=adsk.core.LogLevels.InfoLogLevel):
+    if app:
+        app.log(str(message))
+
+
 
 def getActiveDocument():
     try:
@@ -51,7 +63,7 @@ def getActiveDocument():
                 folder = design
 
     except Exception as e:
-        app.log(f"Could not get Active Document: {e}")
+        log(f"Could not get Active Document: {e}")
     return [folder,design]
 
 def update_activity():
@@ -62,52 +74,102 @@ stopEvent = threading.Event()
 
 def run(context):
     try:
-        Contents()  # or move all its contents here directly
+        if sys.platform == "win32":
+            checkInstallWindows()
+        elif sys.platform == "darwin":
+            log("macOS")
+        Contents()
     except Exception as e:
-        app.log(f"Run failed: {str(e)}")
+        log(f"Run failed: {str(e)}")
 
 
 
 def Contents():
-    app.log("part -1")
+    import chardet
+
+    log("part -1")
     try:
         def DetectEncode():
-         configPath = os.path.join(os.environ['USERPROFILE'], '.wakatime.cfg')
-         with open(configPath, "rb") as file:
-                data = file.read()
-                encoded = chardet.detect(data)
-                encoding = encoded["encoding"]
-                if encoding is None:
-                    return "UTF-8"
-                else:
-                    return encoding
+            if sys.platform == "win32":
+                configPath = os.path.join(os.environ['USERPROFILE'], '.wakatime.cfg')
+            elif sys.platform == "darwin":
+                configPath = os.path.join(os.environ['HOME'], '.wakatime.cfg')
+            with open(configPath, "rb") as file:
+                    data = file.read()
+                    from chardet.universaldetector import UniversalDetector
+
+                    def detect(data):
+                        detector = UniversalDetector()
+                        detector.feed(data)
+                        detector.close()
+                        return detector.result
+
+                    encoded = detect(data)
+                    encoding = encoded["encoding"]
+                    if encoding is None:
+                        return "UTF-8"
+                    else:
+                        return encoding
         DetectEncode()
 
-        app.log(DetectEncode())
-        app.log("part 1")
+        log(DetectEncode())
+        log("part 1")
         parse=configparser.ConfigParser()
-        parsePath = os.path.join(os.environ['USERPROFILE'], '.wakatime.cfg')
+        if sys.platform == "win32":
+            parsePath = os.path.join(os.environ['USERPROFILE'], '.wakatime.cfg')
+        else:
+            parsePath = os.path.join(os.environ['HOME'], '.wakatime.cfg')
         parse.read(parsePath, encoding=DetectEncode())
 
         if os.path.exists(parsePath):
             APIKEY = parse.get('settings','api_key')
             APIURL = parse.get('settings','api_url')
-            print("Key: "+APIKEY + " Url: "+ APIURL)
+            log("Key: "+APIKEY + " Url: "+ APIURL)
         else:
             ErrorMessage = ctypes.windll.user32.MessageBoxW(0, u"Please use the script to download the hackatime files! https://hackatime.hackclub.com/", u"Invalid File", 0)
 
         arch = platform.machine()
-        app.log(platform.machine())
+        log(platform.machine())
 
-        app.log("part 2")
-        if arch == "AMD64":
-            WakaTimePath = os.path.join(os.path.dirname(__file__), "WakaTimeCli.exe")
-        elif arch in ("ARM64", "aarch64"):
-            WakaTimePath = os.path.join(os.path.dirname(__file__), "WakaTimeCliARM64.exe")
-        elif arch in ("i386", "x86"):
-            WakaTimePath = os.path.join(os.path.dirname(__file__), "WakaTimeCli386.exe")
-        else:
-            app.log("Unsupported CPU platform ")
+        log("part 2")
+
+        
+        if platform == "linux" or platform == "linux2":
+            log("Linux")
+            if arch in ("AMD","x86_64"):
+                WakaTimePath = os.path.join(os.path.dirname(__file__),"wakatime-clis", "wakatime-cli-linux-amd64")
+            elif arch in ("i386", "i686", "x86"):
+                WakaTimePath = os.path.join(os.path.dirname(__file__),"wakatime-clis", "wakatime-cli-linux-386")
+            elif arch in ("ARM"):
+                WakaTimePath = os.path.join(os.path.dirname(__file__), "wakatime-clis", "wakatime-cli-linux-arm")
+            elif arch in ("ARM64", "aarch64"):
+                WakaTimePath = os.path.join(os.path.dirname(__file__), "wakatime-clis", "wakatime-cli-linux-arm64")
+            elif arch in ("RISCV64", "riscv64"):
+                WakaTimePath = os.path.join(os.path.dirname(__file__), "wakatime-clis", "wakatime-cli-linux-riscv64")
+            else:
+                log("Unsupported Architecture")
+
+
+
+        elif platform == "darwin":
+            log("macOS")
+            if arch in ("AMD","x86_64"):
+                WakaTimePath = os.path.join(os.path.dirname(__file__), "wakatime-clis", "wakatime-cli-darwin-amd64")
+            elif arch in ("ARM64", 'arm64'):
+                WakaTimePath = os.path.join(os.path.dirname(__file__), "wakatime-clis", "wakatime-cli-darwin-arm64")
+
+
+
+        elif sys.platform == "win32":
+            log("Windows")
+            if arch in "AMD64":
+                WakaTimePath = os.path.join(os.path.dirname(__file__), "wakatime-clis", "WakaTimeCli.exe")
+            elif arch in ("ARM64", "aarch64"):
+                WakaTimePath = os.path.join(os.path.dirname(__file__), "wakatime-clis", "WakaTimeCliARM64.exe")
+            elif arch in ("i386", "x86"):
+                WakaTimePath = os.path.join(os.path.dirname(__file__), "wakatime-clis", "WakaTimeCli386.exe")
+                        
+
 
 
         timeout = 30
@@ -117,11 +179,11 @@ def Contents():
 
         data = getActiveDocument()
 
-        app.log("FusionDocument type: " + str(design))
+        log("FusionDocument type: " + str(design))
 
         url = "https://hackatime.hackclub.com/api/v1/my/heartbeats"
 
-        app.log(url)
+        log(url)
 
         
         lastKnownProjectName = "Untitled"
@@ -162,15 +224,18 @@ def Contents():
                     '--is-unsaved-entity',
                     ]
                     try:
-                        app.log("Running CLI: " + ' '.join(CliCommand))
-                        result = subprocess.run(CliCommand, capture_output=True, text=True, creationflags=CREATE_NO_WINDOW)
-                        app.log(f"Heartbeat Sent under project: {folderName}")
+                        log("Running CLI: " + ' '.join(CliCommand))
+                        if  platform == "win32":
+                            result = subprocess.run(CliCommand, capture_output=True, text=True, creationflags=CREATE_NO_WINDOW)
+                        else:
+                            result = subprocess.run(CliCommand, capture_output=True, text=True)
+                        log(f"Heartbeat Sent under project: {folderName}")
                     except Exception as e:
-                        app.log("error!!")
-                        app.log("Error sending heartbeat: " + str(e))
+                        log("error!!")
+                        log("Error sending heartbeat: " + str(e))
 
             else:
-                app.log("User Inactive")
+                log("User Inactive")
 
 
         def handleUserInteractions(args):
@@ -180,7 +245,7 @@ def Contents():
         def onCommandUse(args: adsk.core.ApplicationCommandEventArgs):
             update_activity()
             cmdID = args.commandId
-            app.log(f'Command starting: {cmdID}')
+            log(f'Command starting: {cmdID}')
         futil.add_handler(ui.commandStarting, onCommandUse)
 
         def looping():
@@ -189,12 +254,12 @@ def Contents():
                 time.sleep(heartbeat_interval)
         threading.Thread(target=looping,daemon=True).start()
     except Exception as e:
-        app.log("Error when running!!!")
-        app.log(e)
+        log("Error when running!!!")
+        log(e)
         
 
 def stop():
-    app.log("Shutting Fusion WakaTime down")
+    log("Shutting Fusion WakaTime down")
     futil.clear_handlers()
     stopEvent.set()
 
