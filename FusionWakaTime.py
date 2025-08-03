@@ -17,7 +17,7 @@ from subprocess import CREATE_NO_WINDOW
 from . import commands
 from .lib import fusionAddInUtils as futil
 import threading
-def checkInstall():
+def checkInstallWindows():
     pypath = os.path.dirname(sys.executable)
     PyExe = os.path.join(pypath,"python","python.exe")
     exists = os.path.exists(pypath + "/Lib/site-packages/requests")
@@ -27,7 +27,23 @@ def checkInstall():
     if exists == True:
         app.log("Dependencies already installed...!")
 
-checkInstall()
+def checkInstallMac():
+    pypath = os.path.dirname(sys.executable)
+    PyExe = sys.executable
+
+    version = f"python{sys.version_info.major}.{sys.version_info.minor}"
+    exists = os.path.exists(pypath + f"/../lib/{version}/site-packages/requests")
+    if exists == False:
+        subprocess.check_call([PyExe, "-m", "pip", "install", "requests", "chardet"])
+        app.log("Dependencies Installed...!")
+    if exists == True:
+        app.log("Dependencies already installed...!")
+
+if platform == "win32":
+    checkInstallWindows()
+elif platform == "darwin":
+    checkInstallMac()
+
 import requests
 import platform
 import chardet
