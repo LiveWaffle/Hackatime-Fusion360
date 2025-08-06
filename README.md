@@ -1,7 +1,4 @@
 # Installation Guide
-### Credits
-credits to @its-kronos for hotfixing while i was asleep 
-
 
 ## Prerequisites
 
@@ -34,3 +31,5 @@ Option 2
    ![Guide Part 1](./guidepart1.png)
    ![Guide Image 2](./guideimage2.png)
 
+### Credits
+credits to @its-kronos for hotfixing while i was asleep 
