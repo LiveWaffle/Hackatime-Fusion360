@@ -2,8 +2,6 @@ import adsk.core
 import adsk.fusion
 app = adsk.core.Application.get()
 ui = app.userInterface
-
-
 import traceback
 import hashlib
 import os
@@ -46,7 +44,17 @@ def log(message, level=adsk.core.LogLevels.InfoLogLevel):
     if app:
         app.log(str(message))
 
-
+def waitForDocument():
+    while True:
+        try:
+            if app.activeDocument is not None:
+                break
+        except:
+            pass
+        log("Waiting For Document")
+        time.sleep(1)
+    log("Document Detected")
+    Contents()
 
 def getActiveDocument():
     try:
@@ -78,6 +86,8 @@ def run(context):
             checkInstallWindows()
         elif sys.platform == "darwin":
             log("macOS")
+            threading.Thread(target=waitForDocument, daemon=True).start()
+            return
         Contents()
     except Exception as e:
         log(f"Run failed: {str(e)}")
@@ -225,7 +235,7 @@ def Contents():
                     ]
                     try:
                         log("Running CLI: " + ' '.join(CliCommand))
-                        if  platform == "win32":
+                        if  sys.platform == "win32":
                             result = subprocess.run(CliCommand, capture_output=True, text=True, creationflags=CREATE_NO_WINDOW)
                         else:
                             result = subprocess.run(CliCommand, capture_output=True, text=True)
