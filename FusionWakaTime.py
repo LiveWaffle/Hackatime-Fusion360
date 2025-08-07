@@ -86,9 +86,7 @@ def run(context):
             checkInstallWindows()
         elif sys.platform == "darwin":
             log("macOS")
-            threading.Thread(target=waitForDocument, daemon=True).start()
-            return
-        Contents()
+            Contents()
     except Exception as e:
         log(f"Run failed: {str(e)}")
 
@@ -96,6 +94,7 @@ def run(context):
 
 def Contents():
     import chardet
+    update_activity() 
 
     log("part -1")
     try:
@@ -144,7 +143,7 @@ def Contents():
         log("part 2")
 
         
-        if platform == "linux" or platform == "linux2":
+        if sys.platform == "linux" or sys.platform == "linux2":
             log("Linux")
             if arch in ("AMD","x86_64"):
                 WakaTimePath = os.path.join(os.path.dirname(__file__),"wakatime-clis", "wakatime-cli-linux-amd64")
@@ -161,12 +160,14 @@ def Contents():
 
 
 
-        elif platform == "darwin":
+        elif sys.platform == "darwin":
             log("macOS")
+            homeDirectory = os.path.expanduser("~")
+            wakatimeDirectory = os.path.join(homeDirectory, ".wakatime")
             if arch in ("AMD","x86_64"):
-                WakaTimePath = os.path.join(os.path.dirname(__file__), "wakatime-clis", "wakatime-cli-darwin-amd64")
+                WakaTimePath = os.path.join(wakatimeDirectory, "wakatime-cli-darwin-amd64")
             elif arch in ("ARM64", 'arm64'):
-                WakaTimePath = os.path.join(os.path.dirname(__file__), "wakatime-clis", "wakatime-cli-darwin-arm64")
+                WakaTimePath = os.path.join(wakatimeDirectory, "wakatime-cli-darwin-arm64")
 
 
 
@@ -272,4 +273,3 @@ def stop():
     log("Shutting Fusion WakaTime down")
     futil.clear_handlers()
     stopEvent.set()
-
