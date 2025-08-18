@@ -1,35 +1,42 @@
-# Installation Guide
+# Wakatime for Fusion360
+*Count Time for Fusion360!*
+## Getting Started
 
-## Prerequisites
+These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
 
-- Fusion 360
-- Python
-- Windows 10/11
+### Prerequisites
 
-## Download
-Option 1
-1. Use the install script
+* Python
+* Fusion360
+* **Ability To Read**
 
-2. Open it in CMD 
+### Installing
 
-3. Run ``` python install.py```
+Clone or Use the install script.
 
+```
+git clone https://github.com/LiveWaffle/Hackatime-Fusion360.git
+```
 
-Option 2
+Then open Fusion360 and go to the addins section under utilities
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/LiveWaffle/Hackatime-Fusion360.git
-
-2. Rename the cloned folder to "FusionWakaTime"
-
-3. Open Fusion 360 > Utilities > Addins > Create New
-
-4. *Optional* Check Run on startup
-
+```
+Utilities > Addins > Add Addin
+```
 
    ![Guide Part 1](./guidepart1.png)
    ![Guide Image 2](./guideimage2.png)
 
-### Credits
-credits to @its-kronos for hotfixing while i was asleep 
+
+
+## Built With
+
+* [Python](http://https://www.python.org/)
+* [Fusion360](https://https://www.autodesk.com/products/fusion-360/overview/)
+
+
+## Authors
+
+* **Andrew Gilliam** - [GitHub](https://github.com/LiveWaffle)
+*  **Contributors** - [Click Here!](https://github.com/LiveWaffle/Hackatime-Fusion360/graphs/contributors)
+
